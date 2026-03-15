@@ -21,8 +21,10 @@ const dmSerifText = DM_Serif_Text({
   variable: '--font-dm-serif',
 })
 
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://devpockit.hypkey.com';
+
 export const metadata: Metadata = {
-  metadataBase: new URL('https://devpockit.hypkey.com'),
+  metadataBase: new URL(baseUrl),
   title: {
     default: 'DevPockit - Free Online Developer Tools',
     template: '%s | DevPockit',
@@ -76,7 +78,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://devpockit.hypkey.com/',
+    url: `${baseUrl}/`,
     siteName: 'DevPockit',
     title: 'DevPockit - Free Online Developer Tools',
     description:
@@ -98,7 +100,7 @@ export const metadata: Metadata = {
     images: ['/og-image.png'],
   },
   alternates: {
-    canonical: 'https://devpockit.hypkey.com/',
+    canonical: `${baseUrl}/`,
   },
   category: 'technology',
 }

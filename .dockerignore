@@ -1,0 +1,12 @@
+node_modules
+.next
+out
+.git
+.gitignore
+*.md
+.env*
+coverage
+.nyc_output
+*.log
+.DS_Store
+.plan

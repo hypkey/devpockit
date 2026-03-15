@@ -2,6 +2,8 @@
 
 import { Tool } from '@/types/tools';
 
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://devpockit.hypkey.com';
+
 interface WebsiteJsonLdProps {
   type: 'website';
 }
@@ -29,12 +31,12 @@ export function JsonLd(props: JsonLdProps) {
         name: 'DevPockit',
         description:
           'Free online developer tools that run locally in your browser. JSON formatter, UUID generator, JWT decoder, and more.',
-        url: 'https://devpockit.hypkey.com',
+        url: baseUrl,
         potentialAction: {
           '@type': 'SearchAction',
           target: {
             '@type': 'EntryPoint',
-            urlTemplate: 'https://devpockit.hypkey.com/tools?search={search_term_string}',
+            urlTemplate: `${baseUrl}/tools?search={search_term_string}`,
           },
           'query-input': 'required name=search_term_string',
         },
@@ -47,7 +49,7 @@ export function JsonLd(props: JsonLdProps) {
         '@type': 'SoftwareApplication',
         name: props.tool.name,
         description: props.tool.description,
-        url: `https://devpockit.hypkey.com${props.tool.path}`,
+        url: `${baseUrl}${props.tool.path}`,
         applicationCategory: 'DeveloperApplication',
         operatingSystem: 'Web Browser',
         offers: {

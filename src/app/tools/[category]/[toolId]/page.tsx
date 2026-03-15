@@ -53,6 +53,7 @@ export async function generateMetadata({ params }: ToolPageProps): Promise<Metad
 
   // Ensure trailing slash for GitHub Pages compatibility
   const toolUrl = tool.path.endsWith('/') ? tool.path : `${tool.path}/`;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://devpockit.hypkey.com';
 
   return {
     title,
@@ -61,7 +62,7 @@ export async function generateMetadata({ params }: ToolPageProps): Promise<Metad
     openGraph: {
       title: `${tool.name} | DevPockit`,
       description,
-      url: `https://devpockit.hypkey.com${toolUrl}`,
+      url: `${baseUrl}${toolUrl}`,
       type: 'website',
       images: [
         {
@@ -78,7 +79,7 @@ export async function generateMetadata({ params }: ToolPageProps): Promise<Metad
       description,
     },
     alternates: {
-      canonical: `https://devpockit.hypkey.com${toolUrl}`,
+      canonical: `${baseUrl}${toolUrl}`,
     },
   };
 }

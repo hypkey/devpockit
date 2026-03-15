@@ -117,6 +117,31 @@ pnpm start
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed deployment instructions.
 
+## 🏠 Self-Hosting
+
+DevPockit runs entirely in the browser and can be self-hosted on GitHub Pages, your own server, or any static hosting platform.
+
+### Quick Start: GitHub Pages
+
+1. **Fork** this repository
+2. Go to **Settings → Pages** → set Source to **GitHub Actions**
+3. **Push** to `main` — the site deploys automatically
+
+Your instance will be live at `https://<username>.github.io/<repo>/`
+
+### Docker
+
+```bash
+docker build -t devpockit .
+docker run -p 8080:80 devpockit
+```
+
+Visit http://localhost:8080
+
+### Full Guide
+
+See [docs/SELF_HOSTING.md](docs/SELF_HOSTING.md) for GitHub Pages, Docker, nginx, Apache, Caddy, Netlify, Vercel, and Cloudflare Pages.
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) to get started.
