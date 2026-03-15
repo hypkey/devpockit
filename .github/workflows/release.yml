@@ -185,32 +185,35 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-      - name: Verify package.json version matches tag
+      - name: Sync package.json version to tag
         if: success()
-        continue-on-error: true
         run: |
           VERSION="${{ steps.tag_version.outputs.version }}"
-          TAG_NAME="${{ steps.tag_version.outputs.tag_name }}"
-
-          # Check version in package.json from the tag
           CURRENT_VERSION=$(node -p "require('./package.json').version")
 
           if [ "$CURRENT_VERSION" = "$VERSION" ]; then
-            echo "✅ package.json version ($CURRENT_VERSION) matches release tag ($TAG_NAME)"
-            echo "✅ Version sync verified - following Approach 1 (Update Before Tagging)"
-          else
-            echo "⚠️  WARNING: package.json version ($CURRENT_VERSION) does not match release tag ($TAG_NAME)"
-            echo ""
-            echo "📋 Recommended workflow (Approach 1):"
-            echo "   1. Update package.json version to $VERSION"
-            echo "   2. Commit and push (via PR if branch is protected)"
-            echo "   3. Then create the release tag"
-            echo ""
-            echo "💡 For this release, the tag was created but package.json is out of sync."
-            echo "   Please manually update package.json to $VERSION to keep them in sync."
-            echo ""
-            echo "⚠️  This is a warning only - the release will continue."
+            echo "✅ package.json version ($CURRENT_VERSION) already matches tag"
+            exit 0
           fi
+
+          echo "📝 Updating package.json from $CURRENT_VERSION to $VERSION"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Checkout default branch (tag push leaves us in detached HEAD)
+          git fetch origin ${{ github.event.repository.default_branch }}
+          git checkout ${{ github.event.repository.default_branch }}
+
+          # Update package.json
+          node -e "
+            const pkg = require('./package.json');
+            pkg.version = '$VERSION';
+            require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+
+          git add package.json
+          git commit -m "chore: bump version to $VERSION"
+          git push origin ${{ github.event.repository.default_branch }}
 
       - name: Upload build artifacts
         if: success()
