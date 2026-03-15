@@ -188,7 +188,7 @@ export function AppSidebar({
                   <PanelLeft className="h-4 w-4 text-sidebar-foreground" />
                 ) : (
                   <Image
-                    src="/assets/devpockit-logo.svg"
+                    src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/assets/devpockit-logo.svg`}
                     alt="DevPockit Logo"
                     width={32}
                     height={32}

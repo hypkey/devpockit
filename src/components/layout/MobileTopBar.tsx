@@ -53,7 +53,7 @@ export function MobileTopBar({ onToolSelect, onHomeClick }: MobileTopBarProps) {
         aria-label="Go to homepage"
       >
         <Image
-          src="/assets/devpockit-logo.svg"
+          src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/assets/devpockit-logo.svg`}
           alt="DevPockit Logo"
           width={32}
           height={32}
