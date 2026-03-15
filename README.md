@@ -125,7 +125,7 @@ DevPockit runs entirely in the browser and can be self-hosted on GitHub Pages, y
 
 1. **Fork** this repository
 2. Go to **Settings → Pages** → set Source to **GitHub Actions**
-3. **Push** to `main` — the site deploys automatically
+3. Go to **Actions → Deploy to GitHub Pages** → **Run workflow**
 
 Your instance will be live at `https://<username>.github.io/<repo>/`
 

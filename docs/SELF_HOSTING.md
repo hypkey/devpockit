@@ -26,13 +26,24 @@ Before building, set these environment variables for self-hosting:
 2. **Enable GitHub Pages:**
    - Go to **Settings → Pages**
    - Under "Build and deployment", set Source to **GitHub Actions**
-3. **Push** to the `main` branch. The workflow will build and deploy automatically.
+3. **Deploy** by going to **Actions → Deploy to GitHub Pages → Run workflow**.
 
 Your site will be available at:
 - **Project site:** `https://<username>.github.io/<repo-name>/`
 - **User/org site:** `https://<username>.github.io/` (when repo name is `username.github.io`)
 
 The deploy workflow sets `NEXT_PUBLIC_BASE_URL` and `BASE_PATH` automatically based on your repository.
+
+### Deploy from main vs. a specific release
+
+When you run the workflow, you can choose what to deploy:
+
+| Ref (input) | What gets deployed |
+|-------------|---------------------|
+| *Leave empty* | Default branch (`main`) — includes unreleased changes after syncing with upstream |
+| `v0.1.7` (tag) | That specific release — matches upstream production, stable |
+
+**Tip:** If you sync your fork with upstream and want the same version as the official site, enter the latest release tag (e.g. `v0.1.7`) in the Ref field before running the workflow.
 
 ### Environment variables (optional)
 
