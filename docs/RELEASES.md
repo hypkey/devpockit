@@ -2,21 +2,32 @@
 
 This document describes how to create and deploy releases for DevPockit.
 
+## Branching Model
+
+This project uses a two-branch model:
+
+| Branch | Purpose |
+|--------|---------|
+| `main` | Production only — updated exclusively by release PRs from `develop`. Always stable and tagged. |
+| `develop` | Active development — all feature branches merge here. |
+
+This ensures fork users who sync `main` always get released, stable code. Tags always point to commits that exist in `main`, so they are available immediately after a fork sync.
+
 ## Release Workflow
 
-Releases are automatically deployed when you create a version tag. The workflow:
-
-1. **Tag Creation**: Create and push a version tag (e.g., `v0.1.0`)
-2. **Automated Build**: GitHub Actions builds the application
-3. **Testing**: Runs type checking, linting, and tests
-4. **Deployment**: Deploys to production (GitHub Pages)
-5. **Release Creation**: Creates a GitHub release with notes from CHANGELOG.md
+1. **Development** happens on feature branches merged into `develop`.
+2. When ready to release, open a **PR: `develop` → `main`**, including:
+   - Updated `package.json` version
+   - Updated `CHANGELOG.md`
+3. **Merge the PR** after review and CI passes.
+4. **Tag the merge commit** on `main` and push the tag — this triggers the release workflow.
+5. **Automated**: GitHub Actions builds, deploys to GitHub Pages, and creates a GitHub release.
 
 ## Creating a Release
 
-### Step 1: Update Version Information
+### Step 1: Prepare the release PR
 
-Before creating a release, update:
+On `develop` (or a dedicated `release/x.y.z` branch cut from `develop`):
 
 1. **package.json**: Update the `version` field
    ```json
@@ -24,24 +35,6 @@ Before creating a release, update:
      "version": "0.1.0"
    }
    ```
-
-### Version Update Workflow (Approach 1: Update Before Tagging)
-
-This project follows **Approach 1** (Update Before Tagging), the industry standard used by most open-source projects:
-
-**Workflow:**
-1. Update `package.json` version
-2. Commit and push (via PR if branch is protected)
-3. After PR is merged, create the release tag
-
-**Why this approach:**
-- ✅ Tag already includes correct version in package.json
-- ✅ No post-release sync needed
-- ✅ Clean git history
-- ✅ Works perfectly with protected branches
-- ✅ Industry standard (used by React, Next.js, etc.)
-
-**Important:** Always update `package.json` **before** creating the release tag. The workflow will verify version sync and warn if they don't match.
 
 2. **CHANGELOG.md**: Add release notes for the new version
    ```markdown
@@ -64,45 +57,39 @@ This project follows **Approach 1** (Update Before Tagging), the industry standa
    }
    ```
 
-### Step 2: Commit and Push Version Update
+### Step 2: Open and merge the release PR
 
-**If your branch is protected (requires PR):**
 ```bash
-# Create a branch for the version update
-git checkout -b chore/bump-version-to-0.1.0
-
-# Commit changes
+# On develop (or a release/x.y.z branch)
 git add package.json CHANGELOG.md
 git commit -m "chore: bump version to 0.1.0"
-
-# Push and create PR
-git push origin chore/bump-version-to-0.1.0
-# Then create PR on GitHub and merge it
+git push origin develop   # or your release branch
 ```
 
-**If your branch is not protected:**
-```bash
-git add package.json CHANGELOG.md
-git commit -m "chore: bump version to 0.1.0"
-git push origin main
-```
+Then open a PR on GitHub:
+- **Base**: `main`
+- **Compare**: `develop` (or `release/0.1.0`)
+- Title: `chore: release v0.1.0`
 
-### Step 3: Create and Push Version Tag
+Merge the PR after review and CI passes.
 
-**Important:** Only create the tag **after** the version update PR is merged (or pushed if not protected).
+### Step 3: Tag the merge commit on main
 
 ```bash
+git checkout main
+git pull origin main
+
 # Create annotated tag
 git tag -a v0.1.0 -m "Release version 0.1.0"
 
-# Push tag to trigger deployment
+# Push tag to trigger release workflow
 git push origin v0.1.0
 ```
 
 Or create the tag via GitHub:
 1. Go to **Releases** → **Draft a new release**
 2. Choose **Create new tag**: `v0.1.0`
-3. Select target branch: `main`
+3. **Target**: `main` (important — always tag from main)
 4. Release title: `Release 0.1.0`
 5. Description: Copy from CHANGELOG.md
 6. Click **Publish release**

@@ -1,3 +1,16 @@
+# Release workflow — triggers on version tags pushed to main.
+#
+# Branching model:
+#   develop  → active development, feature branches merge here
+#   main     → production only, updated only by release PRs from develop
+#
+# Release flow:
+#   1. Open PR: develop → main (bump package.json version + CHANGELOG)
+#   2. Merge the PR
+#   3. Pull main locally, tag it: git tag v0.1.7 && git push origin v0.1.7
+#   4. This workflow runs, builds, deploys to GitHub Pages, creates GitHub release
+#
+# Fork users who sync main will always get released code with the matching tag.
 name: Create Release and Deploy
 
 on:

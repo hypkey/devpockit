@@ -173,16 +173,27 @@ docs(readme): update installation instructions
 refactor(tools): extract common tool logic to shared utilities
 ```
 
+### Branching Model
+
+This project uses a two-branch model:
+
+| Branch | Purpose |
+|--------|---------|
+| `main` | Production only — updated exclusively by release PRs. Always stable. |
+| `develop` | Active development — feature branches merge here. |
+
+Fork users who sync `main` will always get released, stable code.
+
 ### Pull Request Process
 
 1. **Update your fork:**
    ```bash
-   git checkout main
-   git pull upstream main
-   git push origin main
+   git checkout develop
+   git pull upstream develop
+   git push origin develop
    ```
 
-2. **Create a feature branch:**
+2. **Create a feature branch from `develop`:**
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -212,9 +223,10 @@ refactor(tools): extract common tool logic to shared utilities
    git push origin feature/your-feature-name
    ```
 
-7. **Create a Pull Request:**
+7. **Create a Pull Request targeting `develop`:**
    - Go to the GitHub repository
    - Click "New Pull Request"
+   - Set **base** to `develop` (not `main`)
    - Select your branch
    - Fill out the PR template
    - Link any related issues

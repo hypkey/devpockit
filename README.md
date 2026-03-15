@@ -125,9 +125,12 @@ DevPockit runs entirely in the browser and can be self-hosted on GitHub Pages, y
 
 1. **Fork** this repository
 2. Go to **Settings → Pages** → set Source to **GitHub Actions**
-3. Go to **Actions → Deploy to GitHub Pages** → **Run workflow**
+3. **Sync fork** to get the latest release
+4. Go to **Actions → Deploy to GitHub Pages** → **Run workflow**
 
 Your instance will be live at `https://<username>.github.io/<repo>/`
+
+> **Note:** `main` only contains released code — development happens on `develop`. Syncing your fork is always safe; you will never accidentally deploy unreleased changes.
 
 ### Docker
 

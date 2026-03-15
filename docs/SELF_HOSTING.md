@@ -34,16 +34,9 @@ Your site will be available at:
 
 The deploy workflow sets `NEXT_PUBLIC_BASE_URL` and `BASE_PATH` automatically based on your repository.
 
-### Deploy from main vs. a specific release
+### Why syncing your fork is always safe
 
-When you run the workflow, you can choose what to deploy:
-
-| Ref (input) | What gets deployed |
-|-------------|---------------------|
-| *Leave empty* | Default branch (`main`) — includes unreleased changes after syncing with upstream |
-| `v0.1.7` (tag) | That specific release — matches upstream production, stable |
-
-**Tip:** If you sync your fork with upstream and want the same version as the official site, enter the latest release tag (e.g. `v0.1.7`) in the Ref field before running the workflow.
+This project uses a two-branch model: development happens on `develop`, and `main` is only updated when a release is published. When you sync your fork, GitHub syncs `main` — which means you only ever get released, stable code. Tags always point to commits in `main`, so they are present in your fork after a sync.
 
 ### Environment variables (optional)
 
