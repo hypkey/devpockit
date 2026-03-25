@@ -8,13 +8,16 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from '@/components/ui/input';
 import { JsonTreeView } from '@/components/ui/json-tree-view';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   DEFAULT_JSON_PATH_OPTIONS,
   JSON_PATH_COMMON_PATTERNS,
   JSON_PATH_EXAMPLES,
+  JSON_PATH_SORT_OPTIONS,
   type JsonPathFinderOptions
 } from '@/config/json-path-finder-config';
 import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme';
+import { sortObjectKeys } from '@/libs/json-formatter';
 import {
   evaluateJsonPath,
   formatJsonPathResults,
@@ -22,8 +25,8 @@ import {
   type JsonPathResult
 } from '@/libs/json-path-finder';
 import { cn } from '@/libs/utils';
-import { ArrowPathIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { ArrowDownTrayIcon, ArrowPathIcon, ChevronDownIcon, DocumentArrowUpIcon, LinkIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 interface JsonPathFinderProps {
   className?: string;
@@ -44,6 +47,14 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
   const [isHydrated, setIsHydrated] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('tree');
   const [getExpandedJson, setGetExpandedJson] = useState<(() => string) | null>(null);
+
+  // URL loader state
+  const [urlInputVisible, setUrlInputVisible] = useState(false);
+  const [urlValue, setUrlValue] = useState('');
+  const [isFetchingUrl, setIsFetchingUrl] = useState(false);
+
+  // File upload ref
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Editor settings
   const [theme] = useCodeEditorTheme('basicDark');
@@ -133,6 +144,11 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
         return;
       }
 
+      // Apply key sorting if enabled
+      if (options.sortKeys !== 'none') {
+        jsonData = sortObjectKeys(jsonData, options.sortKeys);
+      }
+
       // Simulate async operation for better UX
       await new Promise(resolve => setTimeout(resolve, 300));
 
@@ -166,7 +182,6 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
 
   const handleLoadPattern = (pattern: typeof JSON_PATH_COMMON_PATTERNS[0]) => {
     setPathInput(pattern.example);
-    // Focus on path input
     setTimeout(() => {
       const pathInputElement = document.querySelector('input[placeholder*="JSONPath"]') as HTMLInputElement;
       if (pathInputElement) {
@@ -175,32 +190,85 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
     }, 100);
   };
 
-  const getCharacterCount = (text: string): number => {
-    return text.length;
-  };
+  const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const content = ev.target?.result as string;
+      setJsonInput(content);
+      setError('');
+      setOutput('');
+      setResult(null);
+    };
+    reader.onerror = () => setError('Failed to read file');
+    reader.readAsText(file);
+    // Reset so the same file can be re-uploaded
+    e.target.value = '';
+  }, []);
+
+  const handleLoadUrl = useCallback(async () => {
+    const url = urlValue.trim();
+    if (!url) return;
+    setIsFetchingUrl(true);
+    setError('');
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      const text = await res.text();
+      setJsonInput(text);
+      setOutput('');
+      setResult(null);
+      setUrlInputVisible(false);
+      setUrlValue('');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to fetch URL';
+      setError(
+        msg.includes('Failed to fetch') || msg.includes('NetworkError')
+          ? `Could not fetch URL — the server may not allow cross-origin requests (CORS). Try downloading the file and uploading it instead.`
+          : msg
+      );
+    } finally {
+      setIsFetchingUrl(false);
+    }
+  }, [urlValue]);
+
+  const handleDownloadResults = useCallback(() => {
+    if (!output) return;
+    const blob = new Blob([output], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'jsonpath-results.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [output]);
+
+  const getCharacterCount = (text: string): number => text.length;
 
   const getLineCount = (text: string): number => {
     if (!text) return 0;
     return text.split('\n').length;
   };
 
-  // Parse JSON safely
+  // Parse JSON safely, applying sort if configured
   const parsedJsonData = useMemo(() => {
     if (!jsonInput.trim()) return null;
     try {
-      return JSON.parse(jsonInput);
+      const parsed = JSON.parse(jsonInput);
+      return options.sortKeys !== 'none' ? sortObjectKeys(parsed, options.sortKeys) : parsed;
     } catch {
       return null;
     }
-  }, [jsonInput]);
+  }, [jsonInput, options.sortKeys]);
 
   // Create output tabs - Always show both tabs
   const outputTabs: CodeOutputTab[] = useMemo(() => {
-    const tabs: CodeOutputTab[] = [
+    return [
       {
         id: 'tree',
         label: 'Tree View',
-        value: '', // Not used for tree view
+        value: '',
         language: 'json'
       },
       {
@@ -210,19 +278,14 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
         language: 'json'
       }
     ];
-
-    return tabs;
   }, [output]);
 
   // Ensure activeTab is valid when outputTabs change
-  // Default to 'tree' if available, otherwise use first available tab
   useEffect(() => {
     if (outputTabs.length > 0) {
       const treeTab = outputTabs.find(tab => tab.id === 'tree');
       const currentTab = outputTabs.find(tab => tab.id === activeTab);
-
       if (!currentTab) {
-        // If current tab is not available, switch to tree if available, otherwise first tab
         setActiveTab(treeTab ? 'tree' : outputTabs[0].id);
       }
     }
@@ -231,7 +294,6 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
   // Custom tab content renderer
   const renderCustomTabContent = (tabId: string): React.ReactNode => {
     if (tabId === 'tree') {
-      // Show tree view if JSON is valid, otherwise show empty state message
       if (parsedJsonData !== null) {
         return (
           <div className="h-full w-full">
@@ -239,7 +301,6 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
               data={parsedJsonData}
               highlightedPaths={result?.paths || []}
               onPathClick={(path) => {
-                // Copy path to clipboard
                 navigator.clipboard.writeText(path).catch(console.error);
               }}
               onGetExpandedJson={(fn: () => string) => setGetExpandedJson(() => fn)}
@@ -249,7 +310,6 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
           </div>
         );
       }
-      // Show empty state when no JSON is provided
       return (
         <div className="h-full w-full flex items-center justify-center text-neutral-500 dark:text-neutral-400">
           <div className="text-center">
@@ -272,10 +332,9 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
           return null;
         }
       }
-      // Function not ready yet, but button should still be enabled
       return '';
     }
-    return null; // Use default copy behavior for other tabs
+    return null;
   }, [activeTab, getExpandedJson]);
 
   return (
@@ -358,8 +417,55 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
             </p>
           </div>
 
+          {/* URL Loader (shown when "From URL" is active) */}
+          {urlInputVisible && (
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="https://example.com/data.json"
+                value={urlValue}
+                onChange={(e) => setUrlValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleLoadUrl();
+                  if (e.key === 'Escape') { setUrlInputVisible(false); setUrlValue(''); }
+                }}
+                className="flex-1 font-mono text-sm h-9"
+                autoFocus
+              />
+              <Button
+                onClick={handleLoadUrl}
+                disabled={!urlValue.trim() || isFetchingUrl}
+                variant="default"
+                size="sm"
+                className="h-9 px-4"
+              >
+                {isFetchingUrl ? (
+                  <ArrowPathIcon className="h-4 w-4 animate-spin" />
+                ) : (
+                  'Load'
+                )}
+              </Button>
+              <Button
+                onClick={() => { setUrlInputVisible(false); setUrlValue(''); }}
+                variant="ghost"
+                size="sm"
+                className="h-9 px-2"
+              >
+                <XMarkIcon className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+
           {/* Side-by-side Editor Panels */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json,application/json,text/plain"
+              className="hidden"
+              onChange={handleFileUpload}
+            />
+
             {/* Input Panel */}
             <CodePanel
               title="JSON Input"
@@ -373,35 +479,53 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
               showCopyButton={false}
               showClearButton={true}
               headerActions={
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 px-3 text-xs"
-                    >
-                      Load Examples
-                      <ChevronDownIcon className="h-3 w-3 ml-1" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="max-h-[300px] overflow-y-auto">
-                    {JSON_PATH_EXAMPLES.map((example, index) => (
-                      <DropdownMenuItem
-                        key={index}
-                        onClick={() => handleLoadExample(example)}
-                        className="flex flex-col items-start gap-1"
-                      >
-                        <span className="font-medium">{example.name}</span>
-                        <span className="text-xs text-muted-foreground font-mono">
-                          {example.path}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {example.description}
-                        </span>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="flex items-center gap-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
+                        Load Examples
+                        <ChevronDownIcon className="h-3 w-3 ml-1" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="max-h-[300px] overflow-y-auto">
+                      {JSON_PATH_EXAMPLES.map((example, index) => (
+                        <DropdownMenuItem
+                          key={index}
+                          onClick={() => handleLoadExample(example)}
+                          className="flex flex-col items-start gap-1"
+                        >
+                          <span className="font-medium">{example.name}</span>
+                          <span className="text-xs text-muted-foreground font-mono">
+                            {example.path}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {example.description}
+                          </span>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 px-3 text-xs"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <DocumentArrowUpIcon className="h-3.5 w-3.5 mr-1" />
+                    Upload
+                  </Button>
+
+                  <Button
+                    variant={urlInputVisible ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-8 px-3 text-xs"
+                    onClick={() => setUrlInputVisible(v => !v)}
+                  >
+                    <LinkIcon className="h-3.5 w-3.5 mr-1" />
+                    From URL
+                  </Button>
+                </div>
               }
               footerLeftContent={
                 <span>{getCharacterCount(jsonInput)} characters</span>
@@ -421,6 +545,40 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
               wrapText={outputWrapText}
               onWrapTextChange={setOutputWrapText}
               showWrapToggle={activeTab === 'results'}
+              headerActions={
+                activeTab === 'results' && output ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 px-3 text-xs"
+                    onClick={handleDownloadResults}
+                  >
+                    <ArrowDownTrayIcon className="h-3.5 w-3.5 mr-1" />
+                    Download
+                  </Button>
+                ) : undefined
+              }
+              footerRightContent={
+                activeTab === 'tree' ? (
+                  <Select
+                    value={options.sortKeys}
+                    onValueChange={(value: 'none' | 'asc' | 'desc') =>
+                      setOptions(prev => ({ ...prev, sortKeys: value }))
+                    }
+                  >
+                    <SelectTrigger className="h-6 text-xs w-[150px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {JSON_PATH_SORT_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : undefined
+              }
               footerLeftContent={
                 <>
                   {activeTab === 'tree' && result && (

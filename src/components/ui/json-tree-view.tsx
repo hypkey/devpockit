@@ -24,6 +24,8 @@ export interface JsonTreeNode {
   isExpanded?: boolean;
   children?: JsonTreeNode[];
   parent?: JsonTreeNode;
+  isLastChild: boolean;
+  continuations: boolean[]; // per ancestor slot: true = draw vertical continuation line
 }
 
 export interface JsonTreeViewProps {
@@ -43,9 +45,16 @@ function transformToTreeNodes(
   path: string = '$',
   level: number = 0,
   maxDepth: number = 3,
-  parent?: JsonTreeNode
+  parent?: JsonTreeNode,
+  isLastChild: boolean = true,
+  continuations: boolean[] = []
 ): JsonTreeNode[] {
   const nodes: JsonTreeNode[] = [];
+
+  // Continuations to pass down to children of this node:
+  // - root (level 0) children get [] (no ancestor slots needed yet)
+  // - deeper children get [...parent.continuations, !parent.isLastChild]
+  const childContinuations = level === 0 ? [] : [...continuations, !isLastChild];
 
   if (data === null || data === undefined) {
     nodes.push({
@@ -56,6 +65,8 @@ function transformToTreeNodes(
       level,
       isExpanded: false,
       parent,
+      isLastChild,
+      continuations,
     });
     return nodes;
   }
@@ -70,9 +81,12 @@ function transformToTreeNodes(
       isExpanded: level < maxDepth,
       parent,
       children: [],
+      isLastChild,
+      continuations,
     };
     node.children = data.map((item, index) => {
-      const childNodes = transformToTreeNodes(item, index, `${path}[${index}]`, level + 1, maxDepth, node);
+      const childIsLast = index === data.length - 1;
+      const childNodes = transformToTreeNodes(item, index, `${path}[${index}]`, level + 1, maxDepth, node, childIsLast, childContinuations);
       return childNodes[0];
     });
     nodes.push(node);
@@ -87,9 +101,12 @@ function transformToTreeNodes(
       isExpanded: level < maxDepth,
       parent,
       children: [],
+      isLastChild,
+      continuations,
     };
-    node.children = keys.map((k) => {
-      const childNodes = transformToTreeNodes(data[k], k, `${path}.${k}`, level + 1, maxDepth, node);
+    node.children = keys.map((k, index) => {
+      const childIsLast = index === keys.length - 1;
+      const childNodes = transformToTreeNodes(data[k], k, `${path}.${k}`, level + 1, maxDepth, node, childIsLast, childContinuations);
       return childNodes[0];
     });
     nodes.push(node);
@@ -103,6 +120,8 @@ function transformToTreeNodes(
       level,
       isExpanded: false,
       parent,
+      isLastChild,
+      continuations,
     });
   }
 
@@ -210,13 +229,12 @@ function TreeNodeItem({
   isCopied,
 }: TreeNodeItemProps) {
   const hasChildren = node.children && node.children.length > 0;
-  const indent = node.level * 20;
   const isRoot = node.key === 'root' && node.level === 0;
   const displayKey = isRoot
     ? (node.type === 'array' ? '[]' : node.type === 'object' ? '{}' : '')
     : (typeof node.key === 'number' ? `[${node.key}]` : String(node.key));
   const displayValue = node.type === 'object' || node.type === 'array'
-    ? `${node.type === 'array' ? 'Array' : 'Object'} (${node.children?.length || 0} ${node.children?.length === 1 ? 'item' : 'items'})`
+    ? node.type === 'array' ? `[${node.children?.length || 0}]` : `{${node.children?.length || 0}}`
     : formatValue(node.value, node.type);
 
   const handleCopy = (e: React.MouseEvent) => {
@@ -239,12 +257,56 @@ function TreeNodeItem({
   return (
     <div
       className={cn(
-        'flex items-start gap-2 px-2 py-1.5 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors',
+        'flex items-center gap-2 pr-2 h-full hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors',
         isHighlighted && 'bg-orange-50 dark:bg-orange-950/30 border-l-2 border-orange-600',
         isSearchMatch && !isHighlighted && 'bg-yellow-50 dark:bg-yellow-950/20'
       )}
-      style={{ paddingLeft: `${indent + 8}px` }}
     >
+      {/* Tree Lines */}
+      {node.level === 0 ? (
+        <div className="w-2 shrink-0" />
+      ) : (
+        <div className="flex self-stretch shrink-0">
+          {/* Ancestor continuation slots */}
+          {node.continuations.map((hasContinuation, i) => (
+            <div key={i} className="w-5 relative">
+              {hasContinuation && (
+                <div className="absolute top-0 bottom-0 left-[9px] w-px bg-neutral-300 dark:bg-neutral-600" />
+              )}
+            </div>
+          ))}
+          {/* Current-level connector (├ or └ shape) */}
+          <div className="w-5 relative">
+            {/* Vertical segment: full height if not last child, half if last */}
+            <div className={cn(
+              'absolute left-[9px] w-px bg-neutral-300 dark:bg-neutral-600',
+              node.isLastChild ? 'top-0 bottom-1/2' : 'top-0 bottom-0'
+            )} />
+            {/* Horizontal segment */}
+            <div className="absolute left-[9px] right-0 top-1/2 h-px bg-neutral-300 dark:bg-neutral-600" />
+          </div>
+        </div>
+      )}
+
+      {/* Copy Button (left of expand, shows path as tooltip on hover) */}
+      <div className="relative shrink-0 opacity-0 group-hover:opacity-100">
+        <button
+          onClick={handleCopy}
+          className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors peer"
+          aria-label="Copy JSON path"
+        >
+          {isCopied ? (
+            <CheckIcon className="h-3.5 w-3.5 text-orange-600 dark:text-orange-400" />
+          ) : (
+            <DocumentDuplicateIcon className="h-3.5 w-3.5 text-neutral-600 dark:text-neutral-400" />
+          )}
+        </button>
+        {/* Path tooltip */}
+        <div className="absolute left-full top-1/2 -translate-y-1/2 ml-1.5 px-2 py-1 rounded bg-neutral-800 dark:bg-neutral-200 text-neutral-100 dark:text-neutral-800 text-xs font-mono whitespace-nowrap pointer-events-none z-50 hidden peer-hover:block">
+          {node.path}
+        </div>
+      </div>
+
       {/* Expand/Collapse Button */}
       <button
         onClick={handleToggle}
@@ -286,24 +348,6 @@ function TreeNodeItem({
       <span className={cn('text-sm flex-1', getTypeColor(node.type))}>
         {displayValue}
       </span>
-
-      {/* Path (on hover tooltip would go here) */}
-      <span className="text-xs text-neutral-500 dark:text-neutral-500 font-mono hidden group-hover:inline">
-        {node.path}
-      </span>
-
-      {/* Copy Button */}
-      <button
-        onClick={handleCopy}
-        className="shrink-0 p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors opacity-0 group-hover:opacity-100"
-        aria-label="Copy JSON path"
-      >
-        {isCopied ? (
-          <CheckIcon className="h-3.5 w-3.5 text-orange-600 dark:text-orange-400" />
-        ) : (
-          <DocumentDuplicateIcon className="h-3.5 w-3.5 text-neutral-600 dark:text-neutral-400" />
-        )}
-      </button>
     </div>
   );
 }

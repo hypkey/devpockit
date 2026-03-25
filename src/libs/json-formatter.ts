@@ -85,7 +85,7 @@ export function validateJson(jsonString: string): { isValid: boolean; error?: st
 /**
  * Sort object keys recursively
  */
-function sortObjectKeys(obj: any, sortOrder: 'asc' | 'desc'): any {
+export function sortObjectKeys(obj: any, sortOrder: 'asc' | 'desc'): any {
   if (obj === null || typeof obj !== 'object') {
     return obj;
   }

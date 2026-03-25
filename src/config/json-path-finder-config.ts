@@ -2,13 +2,21 @@ export interface JsonPathFinderOptions {
   returnPaths: boolean;
   returnValues: boolean;
   formatOutput: boolean;
+  sortKeys: 'none' | 'asc' | 'desc';
 }
 
 export const DEFAULT_JSON_PATH_OPTIONS: JsonPathFinderOptions = {
   returnPaths: true,
   returnValues: true,
-  formatOutput: true
+  formatOutput: true,
+  sortKeys: 'none',
 };
+
+export const JSON_PATH_SORT_OPTIONS = [
+  { value: 'none', label: 'Keep original order' },
+  { value: 'asc',  label: 'Ascending (A-Z)' },
+  { value: 'desc', label: 'Descending (Z-A)' },
+] as const;
 
 export const JSON_PATH_EXAMPLES = [
   {

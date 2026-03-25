@@ -322,3 +322,6 @@ certificates/*.crt
 certificates/*.p12
 certificates/*.pfx
 !certificates/.gitkeep
+
+# Claude
+CLAUDE.md
