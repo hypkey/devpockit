@@ -217,6 +217,7 @@ export function createMonacoOptions(
     suggestOnTriggerCharacters: false, // Disable suggestions on trigger characters by default
     acceptSuggestionOnCommitCharacter: false, // Disable auto-accept suggestions by default
     tabCompletion: 'off', // Disable tab completion by default
+    renderValidationDecorations: 'off', // No error/warning squiggles needed in developer tools
     scrollbar: {
       alwaysConsumeMouseWheel: false, // Allow page scrolling when editor reaches end
     },
