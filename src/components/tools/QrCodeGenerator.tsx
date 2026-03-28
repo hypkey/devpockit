@@ -531,7 +531,7 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
       </div>
 
       {/* Body Section */}
-      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0">
+      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0 overflow-y-auto">
         <div className="flex-1 flex flex-col gap-4 min-h-0">
           {/* Controls Row */}
           <div className="flex items-center gap-3 flex-wrap">

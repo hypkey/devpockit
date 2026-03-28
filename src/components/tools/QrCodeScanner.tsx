@@ -364,7 +364,7 @@ export function QrCodeScanner({ className, instanceId, onResult, onError }: QrCo
       </div>
 
       {/* Body Section */}
-      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0">
+      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0 overflow-y-auto">
         <div className="flex-1 flex flex-col gap-4 min-h-0">
           {/* Main Content - Side by Side */}
           <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">

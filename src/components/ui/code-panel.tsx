@@ -71,6 +71,8 @@ export interface CodePanelProps {
   // When true (or when className includes flex-1/h-full), panels grow AND shrink with
   // their flex/grid container instead of enforcing a hard minHeight floor.
   fillHeight?: boolean;
+  // Minimum height when in fill mode. Defaults to '160px' to keep the editor usable.
+  minFillHeight?: string;
 }
 
 export function CodePanel({
@@ -104,6 +106,7 @@ export function CodePanel({
   onEditorMount,
   className,
   fillHeight = false,
+  minFillHeight = '160px',
 }: CodePanelProps) {
   // Detect fill-height mode: the panel is a flex/grid child that should grow and shrink
   // with its container rather than enforce a hard minHeight floor.
@@ -386,7 +389,7 @@ export function CodePanel({
       <div className={cn(
         'flex-1 pt-px pb-1 px-1',
         isCustomContentMode && 'overflow-hidden'
-      )} style={!isCustomContentMode ? { minHeight: isFillMode ? 0 : height } : undefined}>
+      )} style={!isCustomContentMode ? { minHeight: isFillMode ? minFillHeight : height } : undefined}>
         <div style={{ height: '100%' }}>
           {(() => {
             // Custom content mode (children provided, no code editor)

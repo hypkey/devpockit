@@ -172,7 +172,7 @@ export function BaseEncoder({ className, instanceId }: BaseEncoderProps) {
       </div>
 
       {/* Body Section */}
-      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0">
+      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0 overflow-y-auto">
         <div className="flex-1 flex flex-col gap-4 min-h-0">
           {/* Controls */}
           <div className="flex flex-col gap-4">
