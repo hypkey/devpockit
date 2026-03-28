@@ -470,8 +470,8 @@ export function RegexTester({ className, instanceId }: RegexTesterProps) {
       </div>
 
       {/* Body Section */}
-      <div className="flex-1 bg-background px-[24px] pt-6 pb-10">
-        <div className="flex flex-col gap-4">
+      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0">
+        <div className="flex-1 flex flex-col gap-4 min-h-0">
           {/* Controls */}
           <div className="flex flex-col gap-4">
             {/* Main Controls Row */}
@@ -579,7 +579,7 @@ export function RegexTester({ className, instanceId }: RegexTesterProps) {
           </div>
 
           {/* Pattern Input Panel */}
-          <CodePanel
+          <CodePanel fillHeight={true}
             title="Pattern"
             value={options.pattern}
             onChange={(value) => setOptions(prev => ({ ...prev, pattern: value }))}
@@ -649,15 +649,16 @@ export function RegexTester({ className, instanceId }: RegexTesterProps) {
           </div>
 
           {/* Test String and Output Panels Side by Side */}
-          <div className="flex gap-4">
+          <div className="flex-1 flex gap-4 min-h-0">
             {/* Test String Input Panel */}
-            <div className="flex-1">
-              <CodePanel
+            <div className="flex-1 flex flex-col">
+              <CodePanel fillHeight={true}
                 title="Test String"
                 value={options.testString}
                 onChange={(value) => setOptions(prev => ({ ...prev, testString: value }))}
                 language="plaintext"
                 height="400px"
+                className="flex-1"
                 theme={theme}
                 wrapText={testStringWrapText}
                 onWrapTextChange={setTestStringWrapText}
@@ -770,12 +771,13 @@ export function RegexTester({ className, instanceId }: RegexTesterProps) {
             </div>
 
             {/* Output Panel */}
-            <div className="flex-1">
-              <CodePanel
+            <div className="flex-1 flex flex-col">
+              <CodePanel fillHeight={true}
                 tabs={outputTabs}
                 activeTab={activeTab}
                 onTabChange={(tabId) => setActiveTab(tabId as typeof activeTab)}
                 height="400px"
+                className="flex-1"
                 theme={theme}
                 readOnly={true}
                 wrapText={outputWrapText}

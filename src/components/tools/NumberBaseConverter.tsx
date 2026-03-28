@@ -423,8 +423,8 @@ export function NumberBaseConverter({ className, instanceId }: NumberBaseConvert
       </div>
 
       {/* Body Section */}
-      <div className="flex-1 bg-background px-[24px] pt-6 pb-10 overflow-y-auto">
-        <div className="flex flex-col gap-4">
+      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0 overflow-y-auto">
+        <div className="flex-1 flex flex-col gap-4 min-h-0">
           {/* Controls */}
           <div className="flex flex-col gap-4">
             {/* Main Controls Row */}
@@ -476,9 +476,9 @@ export function NumberBaseConverter({ className, instanceId }: NumberBaseConvert
           </div>
 
           {/* Side-by-side Editor Panels */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
             {/* Input Panel */}
-            <CodePanel
+            <CodePanel fillHeight={true}
               key={`input-${options.batchMode ? 'multi' : 'single'}`}
               title="Input"
               value={input}
@@ -515,7 +515,7 @@ export function NumberBaseConverter({ className, instanceId }: NumberBaseConvert
             />
 
             {/* Output Panel */}
-            <CodePanel
+            <CodePanel fillHeight={true}
             tabs={outputTabs}
             activeTab={activeTab}
             onTabChange={setActiveTab}

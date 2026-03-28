@@ -4,11 +4,10 @@ import { useToolState } from '@/components/providers/ToolStateProvider';
 import { Button } from '@/components/ui/button';
 import { CodePanel } from '@/components/ui/code-panel';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { LabeledInput } from '@/components/ui/labeled-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DEFAULT_BASE_OPTIONS, BASE_ENCODING_TYPES, BASE_EXAMPLES, BASE64_VARIANTS, LINE_WRAP_OPTIONS, HEX_CASE_OPTIONS } from '@/config/base-encoder-config';
+import { BASE64_VARIANTS, BASE_ENCODING_TYPES, BASE_EXAMPLES, DEFAULT_BASE_OPTIONS, HEX_CASE_OPTIONS, LINE_WRAP_OPTIONS } from '@/config/base-encoder-config';
 import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme';
-import { encodeBase, decodeBase, type BaseEncoderOptions, type BaseEncoderResult } from '@/libs/base-encoder';
+import { decodeBase, encodeBase, type BaseEncoderOptions, type BaseEncoderResult } from '@/libs/base-encoder';
 import { cn } from '@/libs/utils';
 import { ArrowPathIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -173,8 +172,8 @@ export function BaseEncoder({ className, instanceId }: BaseEncoderProps) {
       </div>
 
       {/* Body Section */}
-      <div className="flex-1 bg-background px-[24px] pt-6 pb-10">
-        <div className="flex flex-col gap-4">
+      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0">
+        <div className="flex-1 flex flex-col gap-4 min-h-0">
           {/* Controls */}
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-3 flex-wrap">
@@ -281,9 +280,9 @@ export function BaseEncoder({ className, instanceId }: BaseEncoderProps) {
           </div>
 
           {/* Side-by-side Editor Panels */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
             {/* Input Panel */}
-            <CodePanel
+            <CodePanel fillHeight={true}
               tabs={inputTabs}
               activeTab={mode}
               onTabChange={handleModeChange}
@@ -354,7 +353,7 @@ export function BaseEncoder({ className, instanceId }: BaseEncoderProps) {
             />
 
             {/* Output Panel */}
-            <CodePanel
+            <CodePanel fillHeight={true}
               title="Output"
               value={output}
               language="plaintext"

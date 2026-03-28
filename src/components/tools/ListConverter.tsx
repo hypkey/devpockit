@@ -185,8 +185,8 @@ export function ListConverter({ className, instanceId }: ListConverterProps) {
       </div>
 
       {/* Body Section */}
-      <div className="flex-1 bg-background px-[24px] pt-6 pb-10 overflow-auto">
-        <div className="flex flex-col gap-4">
+      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0 overflow-auto">
+        <div className="flex-1 flex flex-col gap-4 min-h-0">
           {/* Controls */}
           <div className="flex flex-col gap-4">
             {/* Format Selectors */}
@@ -290,9 +290,9 @@ export function ListConverter({ className, instanceId }: ListConverterProps) {
           </div>
 
           {/* Side-by-side Panels */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
             {/* Input Panel */}
-            <CodePanel
+            <CodePanel fillHeight={true}
               title={`Input (${LIST_CONVERTER_OPTIONS.formats.find(f => f.value === options.inputFormat)?.label})`}
               value={input}
               onChange={setInput}
@@ -337,7 +337,7 @@ export function ListConverter({ className, instanceId }: ListConverterProps) {
             />
 
             {/* Output Panel */}
-            <CodePanel
+            <CodePanel fillHeight={true}
               title={`Output (${LIST_CONVERTER_OPTIONS.formats.find(f => f.value === options.outputFormat)?.label})`}
               value={output}
               readOnly={true}

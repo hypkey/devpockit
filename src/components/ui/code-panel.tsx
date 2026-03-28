@@ -68,6 +68,9 @@ export interface CodePanelProps {
 
   // Styling
   className?: string;
+  // When true (or when className includes flex-1/h-full), panels grow AND shrink with
+  // their flex/grid container instead of enforcing a hard minHeight floor.
+  fillHeight?: boolean;
 }
 
 export function CodePanel({
@@ -100,7 +103,11 @@ export function CodePanel({
   alwaysShowFooter = false,
   onEditorMount,
   className,
+  fillHeight = false,
 }: CodePanelProps) {
+  // Detect fill-height mode: the panel is a flex/grid child that should grow and shrink
+  // with its container rather than enforce a hard minHeight floor.
+  const isFillMode = fillHeight || (className?.split(/\s+/).some(c => c === 'flex-1' || c === 'h-full') ?? false);
   // Auto-detect read-only mode: if onChange is not provided, it's read-only
   const readOnly = readOnlyProp !== undefined ? readOnlyProp : !onChange;
 
@@ -288,8 +295,8 @@ export function CodePanel({
   return (
     <div
       className={cn(
-        'bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-[10px] overflow-hidden',
-        isCustomContentMode && 'flex flex-col',
+        'bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-[10px] overflow-hidden flex flex-col',
+        isFillMode && 'min-h-0',
         className
       )}
       style={isCustomContentMode ? { height } : undefined}
@@ -377,10 +384,10 @@ export function CodePanel({
 
       {/* Editor Area */}
       <div className={cn(
-        'pt-px pb-1 px-1',
-        isCustomContentMode && 'flex-1 overflow-hidden'
-      )}>
-        <div style={isCustomContentMode ? { height: '100%' } : { height }}>
+        'flex-1 pt-px pb-1 px-1',
+        isCustomContentMode && 'overflow-hidden'
+      )} style={!isCustomContentMode ? { minHeight: isFillMode ? 0 : height } : undefined}>
+        <div style={{ height: '100%' }}>
           {(() => {
             // Custom content mode (children provided, no code editor)
             if (isCustomContentMode) {
@@ -411,7 +418,7 @@ export function CodePanel({
                 showLineNumbers={lineNumbers}
                 readOnly={readOnly}
                 placeholder={placeholder}
-                height={height}
+                height="100%"
                 singleLine={singleLine}
                 onMount={handleEditorMount}
               />

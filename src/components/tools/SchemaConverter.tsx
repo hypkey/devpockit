@@ -181,8 +181,8 @@ export function SchemaConverter({ className, instanceId }: SchemaConverterProps)
       </div>
 
       {/* Body Section */}
-      <div className="flex-1 bg-background px-[24px] pt-6 pb-10">
-        <div className="flex flex-col gap-4">
+      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0">
+        <div className="flex-1 flex flex-col gap-4 min-h-0">
           {/* Controls */}
           <div className="flex flex-col gap-4">
             {/* Main Controls Row */}
@@ -333,9 +333,9 @@ export function SchemaConverter({ className, instanceId }: SchemaConverterProps)
           </div>
 
           {/* Side-by-side Editor Panels */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
             {/* Input Panel */}
-            <CodePanel
+            <CodePanel fillHeight={true}
               title={`Input (${SCHEMA_FORMAT_OPTIONS.find(f => f.value === options.sourceFormat)?.label || 'Source'})`}
               value={input}
               onChange={setInput}
@@ -394,7 +394,7 @@ export function SchemaConverter({ className, instanceId }: SchemaConverterProps)
             />
 
             {/* Output Panel */}
-            <CodePanel
+            <CodePanel fillHeight={true}
               title={`Output (${SCHEMA_FORMAT_OPTIONS.find(f => f.value === options.targetFormat)?.label || 'Target'})`}
               readOnly={true}
               value={!isCurrentConversionSupported

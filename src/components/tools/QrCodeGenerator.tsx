@@ -531,8 +531,8 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
       </div>
 
       {/* Body Section */}
-      <div className="flex-1 bg-background px-[24px] pt-6 pb-10">
-        <div className="flex flex-col gap-4">
+      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0">
+        <div className="flex-1 flex flex-col gap-4 min-h-0">
           {/* Controls Row */}
           <div className="flex items-center gap-3 flex-wrap">
             {/* QR Code Type */}
@@ -636,9 +636,9 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
           </div>
 
           {/* Main Content - Side by Side */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
             {/* Input Panel */}
-            <CodePanel
+            <CodePanel fillHeight={true}
               title="Input Data"
               height="600px"
               showCopyButton={false}
@@ -682,7 +682,7 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
             </CodePanel>
 
             {/* Output Panel */}
-            <CodePanel
+            <CodePanel fillHeight={true}
               title="Generated QR Code"
               height="600px"
               showCopyButton={false}

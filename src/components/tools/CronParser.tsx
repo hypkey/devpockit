@@ -252,8 +252,8 @@ export function CronParser({ className, instanceId }: CronParserProps) {
       </div>
 
       {/* Body Section */}
-      <div className="flex-1 bg-background px-[24px] pt-6 pb-10 overflow-y-auto">
-        <div className="flex flex-col gap-6">
+      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0 overflow-y-auto">
+        <div className="flex-1 flex flex-col gap-6 min-h-0">
           {/* Controls */}
           <div className="flex flex-col gap-4">
             {/* Expression Display */}
@@ -405,11 +405,12 @@ export function CronParser({ className, instanceId }: CronParserProps) {
           </div>
 
           {/* Preview Panel */}
-          <CodePanel
+          <CodePanel fillHeight={true}
             title="Preview"
             value={preview || (isValidating ? 'Validating...' : '// Build your cron expression above to see preview')}
             language="plaintext"
             height="400px"
+            className="flex-1"
             theme={theme}
             wrapText={wrapText}
             onWrapTextChange={setWrapText}

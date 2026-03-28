@@ -190,8 +190,8 @@ export function IpChecker({ className, instanceId }: IpCheckerProps) {
       </div>
 
       {/* Body Section */}
-      <div className="flex-1 bg-background px-[24px] pt-6 pb-10">
-        <div className="flex flex-col gap-4">
+      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0">
+        <div className="flex-1 flex flex-col gap-4 min-h-0">
           {/* Controls */}
           <div className="flex flex-col gap-4">
             {/* IP Input Section */}
@@ -304,11 +304,12 @@ export function IpChecker({ className, instanceId }: IpCheckerProps) {
           </div>
 
           {/* Output Panel */}
-          <CodePanel
+          <CodePanel fillHeight={true}
             title="IP Information"
             value={output}
             language="json"
             height="500px"
+            className="flex-1"
             theme={theme}
             wrapText={wrapText}
             onWrapTextChange={setWrapText}

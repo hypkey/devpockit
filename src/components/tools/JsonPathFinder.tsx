@@ -331,8 +331,8 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
       </div>
 
       {/* Body Section */}
-      <div className="flex-1 bg-background px-[24px] pt-6 pb-10">
-        <div className="flex flex-col gap-4">
+      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0">
+        <div className="flex-1 flex flex-col gap-4 min-h-0">
           {/* JSONPath Input */}
           <div className="flex flex-col gap-2">
             <Label htmlFor="jsonpath-input" className="text-sm font-medium">
@@ -437,9 +437,9 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
           )}
 
           {/* Side-by-side Editor Panels */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
             {/* Input Panel */}
-            <CodePanel
+            <CodePanel fillHeight={true}
               title="JSON Input"
               value={jsonInput}
               onChange={setJsonInput}
@@ -505,7 +505,7 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
             />
 
             {/* Output Panel */}
-            <CodePanel
+            <CodePanel fillHeight={true}
               tabs={outputTabs}
               activeTab={activeTab}
               onTabChange={setActiveTab}

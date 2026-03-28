@@ -153,8 +153,8 @@ export function HashGenerator({ className, instanceId }: HashGeneratorProps) {
       </div>
 
       {/* Body Section */}
-      <div className="flex-1 bg-background px-[24px] pt-6 pb-10">
-        <div className="flex flex-col gap-4">
+      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0">
+        <div className="flex-1 flex flex-col gap-4 min-h-0">
           {/* Controls */}
           <div className="flex flex-col gap-4">
             {/* Main Controls Row */}
@@ -239,9 +239,9 @@ export function HashGenerator({ className, instanceId }: HashGeneratorProps) {
           </div>
 
           {/* Side-by-side Editor Panels */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
             {/* Input Panel */}
-            <CodePanel
+            <CodePanel fillHeight={true}
               title="Input Text"
               value={input}
               onChange={setInput}
@@ -306,7 +306,7 @@ export function HashGenerator({ className, instanceId }: HashGeneratorProps) {
             />
 
             {/* Output Panel */}
-            <CodePanel
+            <CodePanel fillHeight={true}
               title="Hash Output"
               value={output}
               language="plaintext"
