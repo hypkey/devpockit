@@ -4,6 +4,7 @@ import { useToolState } from '@/components/providers/ToolStateProvider';
 import { Button } from '@/components/ui/button';
 import { CodePanel } from '@/components/ui/code-panel';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { LoadFileButton } from '@/components/ui/load-file-button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { DEFAULT_DIFF_OPTIONS, DIFF_CHECKER_OPTIONS, DIFF_EXAMPLES } from '@/config/diff-checker-config';
@@ -38,6 +39,18 @@ interface InlineDecoration {
   type: 'added' | 'removed';
 }
 
+const EXTENSION_LANGUAGE_MAP: Record<string, string> = {
+  js: 'javascript', jsx: 'javascript', mjs: 'javascript', cjs: 'javascript',
+  ts: 'typescript', tsx: 'typescript',
+  json: 'json', html: 'html', htm: 'html',
+  css: 'css', scss: 'css', less: 'css',
+  py: 'python', java: 'java', cs: 'csharp',
+  cpp: 'cpp', cc: 'cpp', go: 'go', rs: 'rust',
+  sql: 'sql', xml: 'xml', svg: 'xml',
+  yaml: 'yaml', yml: 'yaml', md: 'markdown',
+  sh: 'shell', bash: 'shell', zsh: 'shell',
+};
+
 export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
   const { toolState, updateToolState } = useToolState('diff-checker', instanceId);
 
@@ -56,6 +69,10 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
   const modifiedEditorRef = useRef<any>(null);
   const originalDecorationsRef = useRef<string[]>([]);
   const modifiedDecorationsRef = useRef<string[]>([]);
+
+  // View zone IDs for alignment padding
+  const originalViewZoneIdsRef = useRef<string[]>([]);
+  const modifiedViewZoneIdsRef = useRef<string[]>([]);
 
   // Scroll sync refs
   const isSyncingScrollRef = useRef<boolean>(false);
@@ -98,6 +115,11 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
     }
   }, [toolState, isHydrated]);
 
+  interface ViewZoneData {
+    afterLineNumber: number;
+    heightInLines: number;
+  }
+
   // Calculate diff and apply decorations with character-level highlighting
   const calculateDiffAndDecorate = useCallback(() => {
     const lineChanges: Change[] = diffLines(originalText, modifiedText, {
@@ -110,6 +132,8 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
     const modifiedLineDecorations: any[] = [];
     const originalInlineDecorations: InlineDecoration[] = [];
     const modifiedInlineDecorations: InlineDecoration[] = [];
+    const originalViewZones: ViewZoneData[] = [];
+    const modifiedViewZones: ViewZoneData[] = [];
 
     let originalLine = 1;
     let modifiedLine = 1;
@@ -120,11 +144,7 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
       const lineCount = change.count || 0;
 
       if (change.added) {
-        // Check if previous was removed (paired change for inline diff)
-        const prevChange = i > 0 ? lineChanges[i - 1] : null;
-        if (prevChange && prevChange.removed) {
-          // Already handled in removed case
-        }
+        // Standalone addition (not preceded by a removal that already handled it)
         additions += lineCount;
         const lines = (change.value || '').split('\n').filter((_, idx, arr) => idx < arr.length - 1 || arr[idx] !== '');
         lines.forEach((_, idx) => {
@@ -133,6 +153,8 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
             type: 'added',
           });
         });
+        // Pad original side so unchanged lines below stay aligned
+        originalViewZones.push({ afterLineNumber: originalLine - 1, heightInLines: lineCount });
         modifiedLine += lineCount;
       } else if (change.removed) {
         // Check if next is added (paired change for inline diff)
@@ -201,17 +223,33 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
             });
           }
 
-          additions += nextChange.count || 0;
-          modifiedLine += nextChange.count || 0;
+          const addedCount = nextChange.count || 0;
+          additions += addedCount;
+
+          // Add alignment padding on the shorter side
+          if (removedLines.length > addedLines.length) {
+            modifiedViewZones.push({
+              afterLineNumber: modifiedLine + addedLines.length - 1,
+              heightInLines: removedLines.length - addedLines.length,
+            });
+          } else if (addedLines.length > removedLines.length) {
+            originalViewZones.push({
+              afterLineNumber: originalLine + removedLines.length - 1,
+              heightInLines: addedLines.length - removedLines.length,
+            });
+          }
+
+          modifiedLine += addedCount;
           i++; // Skip the next (added) change since we handled it
         } else {
-          // Unpaired removal
+          // Isolated removal — pad modified side
           removedLines.forEach((_, idx) => {
             originalLineDecorations.push({
               lineNumber: originalLine + idx,
               type: 'removed',
             });
           });
+          modifiedViewZones.push({ afterLineNumber: modifiedLine - 1, heightInLines: lineCount });
         }
         originalLine += lineCount;
       } else {
@@ -256,6 +294,22 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
         originalDecorationsRef.current,
         decorations
       );
+
+      // Apply alignment view zones
+      editor.changeViewZones((accessor: any) => {
+        originalViewZoneIdsRef.current.forEach((id) => accessor.removeZone(id));
+        originalViewZoneIdsRef.current = [];
+        originalViewZones.forEach((zone) => {
+          const domNode = document.createElement('div');
+          domNode.className = 'diff-placeholder-zone';
+          const id = accessor.addZone({
+            afterLineNumber: zone.afterLineNumber,
+            heightInLines: zone.heightInLines,
+            domNode,
+          });
+          originalViewZoneIdsRef.current.push(id);
+        });
+      });
     }
 
     if (modifiedEditorRef.current) {
@@ -282,6 +336,22 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
         modifiedDecorationsRef.current,
         decorations
       );
+
+      // Apply alignment view zones
+      editor.changeViewZones((accessor: any) => {
+        modifiedViewZoneIdsRef.current.forEach((id) => accessor.removeZone(id));
+        modifiedViewZoneIdsRef.current = [];
+        modifiedViewZones.forEach((zone) => {
+          const domNode = document.createElement('div');
+          domNode.className = 'diff-placeholder-zone';
+          const id = accessor.addZone({
+            afterLineNumber: zone.afterLineNumber,
+            heightInLines: zone.heightInLines,
+            domNode,
+          });
+          modifiedViewZoneIdsRef.current.push(id);
+        });
+      });
     }
   }, [originalText, modifiedText, options.ignoreWhitespace]);
 
@@ -461,6 +531,15 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
           background-color: rgba(34, 197, 94, 0.4) !important;
           border-radius: 2px;
         }
+        .diff-placeholder-zone {
+          background: repeating-linear-gradient(
+            45deg,
+            rgba(128, 128, 128, 0.08) 0px,
+            rgba(128, 128, 128, 0.08) 4px,
+            transparent 4px,
+            transparent 8px
+          );
+        }
       `}</style>
 
       {/* Header Section */}
@@ -539,22 +618,32 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
               showClearButton={true}
               showCopyButton={true}
               headerActions={
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
-                      Load Example
-                      <ChevronDownIcon className="h-3 w-3 ml-1" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleLoadExample('original', 'javascript')}>
-                      Load JavaScript Example
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleLoadExample('original', 'python')}>
-                      Load Python Example
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <>
+                  <LoadFileButton
+                    onFileLoad={(content, file) => {
+                      setOriginalText(content);
+                      const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+                      const lang = EXTENSION_LANGUAGE_MAP[ext];
+                      if (lang) setOptions((prev) => ({ ...prev, language: lang }));
+                    }}
+                  />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
+                        Load Example
+                        <ChevronDownIcon className="h-3 w-3 ml-1" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleLoadExample('original', 'javascript')}>
+                        Load JavaScript Example
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleLoadExample('original', 'python')}>
+                        Load Python Example
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
               }
               footerLeftContent={
                 <>
@@ -578,22 +667,32 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
               showClearButton={true}
               showCopyButton={true}
               headerActions={
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
-                      Load Example
-                      <ChevronDownIcon className="h-3 w-3 ml-1" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleLoadExample('modified', 'javascript')}>
-                      Load JavaScript Example
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleLoadExample('modified', 'python')}>
-                      Load Python Example
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <>
+                  <LoadFileButton
+                    onFileLoad={(content, file) => {
+                      setModifiedText(content);
+                      const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+                      const lang = EXTENSION_LANGUAGE_MAP[ext];
+                      if (lang) setOptions((prev) => ({ ...prev, language: lang }));
+                    }}
+                  />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
+                        Load Example
+                        <ChevronDownIcon className="h-3 w-3 ml-1" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleLoadExample('modified', 'javascript')}>
+                        Load JavaScript Example
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleLoadExample('modified', 'python')}>
+                        Load Python Example
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
               }
               footerLeftContent={
                 <>

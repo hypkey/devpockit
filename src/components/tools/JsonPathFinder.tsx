@@ -8,6 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from '@/components/ui/input';
 import { JsonTreeView } from '@/components/ui/json-tree-view';
 import { Label } from '@/components/ui/label';
+import { LoadFileButton } from '@/components/ui/load-file-button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   DEFAULT_JSON_PATH_OPTIONS,
@@ -25,7 +26,7 @@ import {
   type JsonPathResult
 } from '@/libs/json-path-finder';
 import { cn } from '@/libs/utils';
-import { ArrowDownTrayIcon, ArrowPathIcon, ChevronDownIcon, DocumentArrowUpIcon, LinkIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { ArrowDownTrayIcon, ArrowPathIcon, ChevronDownIcon, LinkIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 interface JsonPathFinderProps {
@@ -52,9 +53,6 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
   const [urlInputVisible, setUrlInputVisible] = useState(false);
   const [urlValue, setUrlValue] = useState('');
   const [isFetchingUrl, setIsFetchingUrl] = useState(false);
-
-  // File upload ref
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Editor settings
   const [theme] = useCodeEditorTheme('basicDark');
@@ -189,23 +187,6 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
       }
     }, 100);
   };
-
-  const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const content = ev.target?.result as string;
-      setJsonInput(content);
-      setError('');
-      setOutput('');
-      setResult(null);
-    };
-    reader.onerror = () => setError('Failed to read file');
-    reader.readAsText(file);
-    // Reset so the same file can be re-uploaded
-    e.target.value = '';
-  }, []);
 
   const handleLoadUrl = useCallback(async () => {
     const url = urlValue.trim();
@@ -457,15 +438,6 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
 
           {/* Side-by-side Editor Panels */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Hidden file input */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".json,application/json,text/plain"
-              className="hidden"
-              onChange={handleFileUpload}
-            />
-
             {/* Input Panel */}
             <CodePanel
               title="JSON Input"
@@ -506,15 +478,15 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
                     </DropdownMenuContent>
                   </DropdownMenu>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 px-3 text-xs"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <DocumentArrowUpIcon className="h-3.5 w-3.5 mr-1" />
-                    Upload
-                  </Button>
+                  <LoadFileButton
+                    accept=".json,application/json,text/plain"
+                    onFileLoad={(content) => {
+                      setJsonInput(content);
+                      setError('');
+                      setOutput('');
+                      setResult(null);
+                    }}
+                  />
 
                   <Button
                     variant={urlInputVisible ? 'default' : 'outline'}

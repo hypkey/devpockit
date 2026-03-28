@@ -4,6 +4,7 @@ import { useToolState } from '@/components/providers/ToolStateProvider';
 import { Button } from '@/components/ui/button';
 import { CodePanel } from '@/components/ui/code-panel';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { LoadFileButton } from '@/components/ui/load-file-button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DEFAULT_JSON_OPTIONS, JSON_EXAMPLES, JSON_FORMAT_OPTIONS } from '@/config/json-formatter-config';
 import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme';
@@ -215,29 +216,38 @@ export function JsonFormatter({ className, instanceId }: JsonFormatterProps) {
               showCopyButton={false}
               showClearButton={true}
               headerActions={
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 px-3 text-xs"
-                    >
-                      Load Examples
-                      <ChevronDownIcon className="h-3 w-3 ml-1" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleLoadExample('valid')}>
-                      Load Valid Example
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleLoadExample('minified')}>
-                      Load Minified Example
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleLoadExample('invalid')}>
-                      Load Invalid Example
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <>
+                  <LoadFileButton
+                    accept=".json,.json5,*/*"
+                    onFileLoad={(content) => {
+                      setInput(content);
+                      setError('');
+                    }}
+                  />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-3 text-xs"
+                      >
+                        Load Examples
+                        <ChevronDownIcon className="h-3 w-3 ml-1" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleLoadExample('valid')}>
+                        Load Valid Example
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleLoadExample('minified')}>
+                        Load Minified Example
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleLoadExample('invalid')}>
+                        Load Invalid Example
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
               }
               footerLeftContent={
                 <span>{getCharacterCount(input)} characters</span>
